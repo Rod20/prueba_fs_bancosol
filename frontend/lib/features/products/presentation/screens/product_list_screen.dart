@@ -42,11 +42,11 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
   void _showFilterModal(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.surface,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => const _FilterModalContent(),
+      builder: (context) => _FilterModalContent(),
     );
   }
 
@@ -168,7 +168,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
                             product.name,
                             style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
-                          subtitle: Text(product.sku),
+                          subtitle: Text('SKU: ${product.sku}'),
                           trailing: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.end,
@@ -215,6 +215,9 @@ class _FilterModalContent extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final filters = ref.watch(productFilterProvider);
     final notifier = ref.read(productFilterProvider.notifier);
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    final colorScheme = theme.colorScheme;
 
     return Padding(
       padding: const EdgeInsets.all(24),
@@ -225,12 +228,12 @@ class _FilterModalContent extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'Filtrar Productos',
-                style: TextStyle(
-                  fontSize: 20,
+                style: textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
+                  color: colorScheme.primary,
+                  fontSize: 22,
                 ),
               ),
               TextButton(
@@ -246,15 +249,23 @@ class _FilterModalContent extends ConsumerWidget {
           const Divider(),
           const SizedBox(height: 10),
 
-          const Text(
+          Text(
             'Disponibilidad',
-            style: TextStyle(fontWeight: FontWeight.bold),
+            style: textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: colorScheme.onSurface,
+            ),
           ),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text('Mostrar solo disponibles'),
-            subtitle: const Text('Ocultar productos sin stock'),
-            activeColor: AppColors.secondary,
+            title: Text('Mostrar solo disponibles', style: textTheme.bodyLarge),
+            subtitle: Text(
+              'Ocultar productos sin stock',
+              style: textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurface.withOpacity(0.6),
+              ),
+            ),
+            activeColor: colorScheme.secondary,
             value: filters.onlyAvailable,
             onChanged: (bool val) {
               notifier.toggleAvailable();
@@ -262,9 +273,12 @@ class _FilterModalContent extends ConsumerWidget {
           ),
           const SizedBox(height: 10),
 
-          const Text(
+          Text(
             'Ordenar por Precio',
-            style: TextStyle(fontWeight: FontWeight.bold),
+            style: textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: colorScheme.onSurface,
+            ),
           ),
           const SizedBox(height: 10),
 
@@ -274,21 +288,27 @@ class _FilterModalContent extends ConsumerWidget {
             child: Column(
               children: [
                 RadioListTile<String?>(
-                  title: const Text('Por defecto'),
+                  title: Text('Por defecto', style: textTheme.bodyLarge),
                   value: null,
-                  activeColor: AppColors.primary,
+                  activeColor: colorScheme.primary,
                   contentPadding: EdgeInsets.zero,
                 ),
                 RadioListTile<String?>(
-                  title: const Text('Menor precio primero'),
+                  title: Text(
+                    'Menor precio primero',
+                    style: textTheme.bodyLarge,
+                  ),
                   value: 'price_asc',
-                  activeColor: AppColors.secondary,
+                  activeColor: colorScheme.secondary,
                   contentPadding: EdgeInsets.zero,
                 ),
                 RadioListTile<String?>(
-                  title: const Text('Mayor precio primero'),
+                  title: Text(
+                    'Mayor precio primero',
+                    style: textTheme.bodyLarge,
+                  ),
                   value: 'price_desc',
-                  activeColor: AppColors.secondary,
+                  activeColor: colorScheme.secondary,
                   contentPadding: EdgeInsets.zero,
                 ),
               ],
@@ -300,6 +320,10 @@ class _FilterModalContent extends ConsumerWidget {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
+              ),
               onPressed: () => Navigator.pop(context),
               child: const Text('LISTO'),
             ),
