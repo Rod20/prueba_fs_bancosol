@@ -36,7 +36,7 @@ if (app.Environment.IsDevelopment())
 app.UseCors("AllowAll");
 app.UseHttpsRedirection();
 
-app.MapGet("/products", async (AppDbContext db, string? search, string? sort, bool? onlyAvailable) =>
+app.MapGet("/products", async (AppDbContext db, string? search, string? sort, bool? onlyAvailable, int page = 1, int pageSize = 15) =>
 {
     var query = db.Products.AsQueryable();
     if (!string.IsNullOrWhiteSpace(search))
@@ -57,6 +57,13 @@ app.MapGet("/products", async (AppDbContext db, string? search, string? sort, bo
         _ => query
     };
     return await query.ToListAsync();
+
+    var products = await query
+        .Skip((page - 1) * pageSize)
+        .Take(pageSize)
+        .ToListAsync();
+
+    return products;
 })
 .WithName("GetProducts")
 .WithOpenApi();
