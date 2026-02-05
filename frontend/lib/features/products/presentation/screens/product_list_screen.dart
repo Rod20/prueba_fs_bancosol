@@ -168,7 +168,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
                             product.name,
                             style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
-                          subtitle: Text(product.sku),
+                          subtitle: Text('SKU: ${product.sku}'),
                           trailing: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.end,
