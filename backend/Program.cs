@@ -1,44 +1,67 @@
+using Microsoft.EntityFrameworkCore;
+using ProductApi.Data;
+using ProductApi.Dtos;
+using ProductApi.Models;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddDbContext<AppDbContext>(opt =>
+    opt.UseInMemoryDatabase("ProductDb"));
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+        policy => policy.AllowAnyOrigin()
+                        .AllowAnyMethod()
+                        .AllowAnyHeader());
+});
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.EnsureCreated();
+}
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
+app.UseCors("AllowAll");
 app.UseHttpsRedirection();
 
-var summaries = new[]
+app.MapGet("/products", async (AppDbContext db, string? search) =>
 {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
+    var query = db.Products.AsQueryable();
+    if (!string.IsNullOrWhiteSpace(search))
+    {
+        var term = search.ToLower();
+        query = query.Where(p => p.Name.ToLower().Contains(term)
+                              || p.Sku.ToLower().Contains(term));
+    }
+    return await query.ToListAsync();
 })
-.WithName("GetWeatherForecast")
+.WithName("GetProducts")
+.WithOpenApi();
+
+app.MapPatch("/products/{id}", async (int id, ActualizarPrecioDto dto, AppDbContext db) =>
+{
+    if (dto.Price <= 0)
+        return Results.BadRequest(new { message = "El precio debe ser mayor a 0" });
+    var product = await db.Products.FindAsync(id);
+    if (product is null)
+        return Results.NotFound(new { message = "Producto no encontrado" });
+    product.Price = dto.Price;
+    await db.SaveChangesAsync();
+    return Results.Ok(product);
+})
+.WithName("UpdateProductPrice")
 .WithOpenApi();
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
