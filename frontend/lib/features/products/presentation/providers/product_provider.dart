@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import '../../domain/product.dart';
 import '../../data/product_repository.dart';
 
@@ -41,14 +42,71 @@ final productFilterProvider =
       return FilterNotifier();
     });
 
-final productsListProvider = FutureProvider.autoDispose<List<Product>>((
-  ref,
-) async {
-  final repository = ref.watch(productRepositoryProvider);
-  final filterState = ref.watch(productFilterProvider);
-  return repository.getProducts(
-    search: filterState.search,
-    sort: filterState.sort,
-    onlyAvailable: filterState.onlyAvailable,
-  );
-});
+class ProductsNotifier extends StateNotifier<AsyncValue<List<Product>>> {
+  final Ref ref;
+  int _page = 1;
+  bool _hasMore = true;
+  bool _isLoadingMore = false;
+
+  ProductsNotifier(this.ref) : super(const AsyncValue.loading()) {
+    loadInitial();
+  }
+
+  Future<void> loadInitial() async {
+    try {
+      _page = 1;
+      _hasMore = true;
+      _isLoadingMore = false;
+      state = const AsyncValue.loading();
+
+      final products = await _fetchProducts(page: 1);
+
+      state = AsyncValue.data(products);
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
+    }
+  }
+
+  Future<void> loadNextPage() async {
+    if (_isLoadingMore || !_hasMore || !state.hasValue) return;
+
+    _isLoadingMore = true;
+
+    try {
+      final currentList = state.value!;
+      final newProducts = await _fetchProducts(page: _page + 1);
+
+      if (newProducts.isEmpty) {
+        _hasMore = false;
+      } else {
+        _page++;
+        state = AsyncValue.data([...currentList, ...newProducts]);
+      }
+    } catch (e) {
+      print("Error cargando página $_page: $e");
+    } finally {
+      _isLoadingMore = false;
+    }
+  }
+
+  Future<List<Product>> _fetchProducts({required int page}) {
+    final repository = ref.read(productRepositoryProvider);
+    final filters = ref.read(productFilterProvider);
+
+    return repository.getProducts(
+      search: filters.search,
+      sort: filters.sort,
+      onlyAvailable: filters.onlyAvailable,
+      page: page,
+    );
+  }
+}
+
+final productsListProvider =
+    StateNotifierProvider.autoDispose<
+      ProductsNotifier,
+      AsyncValue<List<Product>>
+    >((ref) {
+      ref.watch(productFilterProvider);
+      return ProductsNotifier(ref);
+    });

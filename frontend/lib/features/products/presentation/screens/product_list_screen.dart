@@ -16,11 +16,19 @@ class ProductListScreen extends ConsumerStatefulWidget {
 class _ProductListScreenState extends ConsumerState<ProductListScreen> {
   Timer? _debounce;
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
 
   @override
   void dispose() {
     _debounce?.cancel();
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -40,6 +48,13 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
       ),
       builder: (context) => const _FilterModalContent(),
     );
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      ref.read(productsListProvider.notifier).loadNextPage();
+    }
   }
 
   @override
@@ -95,71 +110,94 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
                     ),
                   );
                 }
-                return ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: products.length,
-                  itemBuilder: (context, index) {
-                    final product = products[index];
-                    final formatCurrency = NumberFormat.currency(
-                      symbol: 'Bs. ',
-                      decimalDigits: 2,
-                    );
+                return RefreshIndicator(
+                  onRefresh: () async => ref.refresh(productsListProvider),
+                  child: ListView.builder(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.all(16),
+                    itemCount: products.length + 1,
+                    itemBuilder: (context, index) {
+                      if (index == products.length) {
+                        if (products.length < 15) {
+                          return const SizedBox.shrink();
+                        }
+                        return const Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: Center(
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ),
+                        );
+                      }
+                      final product = products[index];
 
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      child: ListTile(
-                        onTap: () {
-                          showModalBottomSheet(
-                            context: context,
-                            isScrollControlled: true,
-                            builder: (ctx) =>
-                                UpdatePriceModal(product: product),
-                          );
-                        },
-                        leading: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(
-                            Icons.inventory_2,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                        title: Text(
-                          product.name,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: Text(product.sku),
-                        trailing: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              formatCurrency.format(product.price),
-                              style: const TextStyle(
-                                color: AppColors.secondary,
-                                fontWeight: FontWeight.w900,
-                                fontSize: 16,
-                              ),
+                      final formatCurrency = NumberFormat.currency(
+                        symbol: 'Bs. ',
+                        decimalDigits: 2,
+                      );
+
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        child: ListTile(
+                          onTap: () {
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              builder: (ctx) =>
+                                  UpdatePriceModal(product: product),
+                            );
+                          },
+                          leading: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
                             ),
-                            Text(
-                              product.stock > 0
-                                  ? '${product.stock} disp.'
-                                  : 'Agotado',
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: product.stock > 0
-                                    ? Colors.green
-                                    : Colors.red,
-                              ),
+                            child: const Icon(
+                              Icons.inventory_2,
+                              color: AppColors.primary,
                             ),
-                          ],
+                          ),
+                          title: Text(
+                            product.name,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Text(product.sku),
+                          trailing: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                formatCurrency.format(product.price),
+                                style: const TextStyle(
+                                  color: AppColors.secondary,
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              Text(
+                                product.stock > 0
+                                    ? '${product.stock} disp.'
+                                    : 'Agotado',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: product.stock > 0
+                                      ? Colors.green
+                                      : Colors.red,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 );
               },
             ),

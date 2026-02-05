@@ -7,9 +7,10 @@ class ProductRepository {
     String? search,
     String? sort,
     bool? onlyAvailable,
+    int? page = 1,
   }) async {
     try {
-      final queryParams = <String, dynamic>{};
+      final queryParams = <String, dynamic>{'page': page, 'pageSize': 15};
 
       if (search != null && search.isNotEmpty) queryParams['search'] = search;
       if (sort != null) queryParams['sort'] = sort;

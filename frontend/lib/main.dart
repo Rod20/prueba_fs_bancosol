@@ -15,8 +15,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       title: 'BancoSol App',
-      theme: AppTheme.getTheme(),
-      themeMode: ThemeMode.light,
+      theme: AppTheme.getLight(),
+      darkTheme: AppTheme.getDark(),
+      themeMode: ThemeMode.system,
       routerConfig: productsRouter,
     );
   }
