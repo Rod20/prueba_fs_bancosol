@@ -1,0 +1,25 @@
+# --- .NET / C# ---
+backend/bin/
+backend/obj/
+backend/.vs/
+backend/.vscode/
+*.user
+*.pdb
+*.dll
+
+# --- Flutter / Dart ---
+frontend/build/
+frontend/.dart_tool/
+frontend/.flutter-plugins
+frontend/.flutter-plugins-dependencies
+frontend/.pub-cache/
+frontend/.idea/
+frontend/ios/Flutter/Generated.xcconfig
+frontend/ios/Flutter/flutter_export_environment.sh
+frontend/android/.gradle
+frontend/android/local.properties
+frontend/.vscode/
+
+# --- General / OS ---
+.DS_Store
+Thumbs.db
