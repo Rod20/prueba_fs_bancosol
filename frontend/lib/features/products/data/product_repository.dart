@@ -3,13 +3,21 @@ import '../domain/product.dart';
 import 'product_model.dart';
 
 class ProductRepository {
-  Future<List<Product>> getProducts({String? search}) async {
+  Future<List<Product>> getProducts({
+    String? search,
+    String? sort,
+    bool? onlyAvailable,
+  }) async {
     try {
+      final queryParams = <String, dynamic>{};
+
+      if (search != null && search.isNotEmpty) queryParams['search'] = search;
+      if (sort != null) queryParams['sort'] = sort;
+      if (onlyAvailable == true) queryParams['onlyAvailable'] = true;
+
       final response = await dioClient.get(
         '/products',
-        queryParameters: search != null && search.isNotEmpty
-            ? {'search': search}
-            : null,
+        queryParameters: queryParams,
       );
 
       final List<dynamic> data = response.data;
