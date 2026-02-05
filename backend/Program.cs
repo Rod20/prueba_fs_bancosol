@@ -36,7 +36,7 @@ if (app.Environment.IsDevelopment())
 app.UseCors("AllowAll");
 app.UseHttpsRedirection();
 
-app.MapGet("/products", async (AppDbContext db, string? search) =>
+app.MapGet("/products", async (AppDbContext db, string? search, string? sort, bool? onlyAvailable) =>
 {
     var query = db.Products.AsQueryable();
     if (!string.IsNullOrWhiteSpace(search))
@@ -45,6 +45,17 @@ app.MapGet("/products", async (AppDbContext db, string? search) =>
         query = query.Where(p => p.Name.ToLower().Contains(term)
                               || p.Sku.ToLower().Contains(term));
     }
+    if (onlyAvailable == true)
+    {
+        query = query.Where(p => p.Stock > 0);
+    }
+
+    query = sort switch
+    {
+        "price_asc" => query.OrderBy(p => p.Price),
+        "price_desc" => query.OrderByDescending(p => p.Price),
+        _ => query
+    };
     return await query.ToListAsync();
 })
 .WithName("GetProducts")

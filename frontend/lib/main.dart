@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:product_app/features/products/presentation/screens/product_list_screen.dart';
+import 'package:product_app/config/products_router.dart';
 import 'config/theme.dart';
 
 void main() {
@@ -12,12 +12,12 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       title: 'BancoSol App',
       theme: AppTheme.getTheme(),
       themeMode: ThemeMode.light,
-      home: const ProductListScreen(),
+      routerConfig: productsRouter,
     );
   }
 }

@@ -5,7 +5,7 @@ import 'package:dio/dio.dart';
 // ToDo: Para sacar la ip local en Windows, ejecutar el comando `ipconfig` en la terminal y buscar la dirección IPv4 correspondiente a la conexión activa.
 // ToDo: El puerto :5080 es el puerto donde se ejecuta el backend. Este valor no debe modificarse.
 // ToDo: El valor localhost no es válido para emuladores de Android ni dispositivos físicos debido a que se refiere al propio dispositivo.
-// ToDo: NOTA, EL CELULAR FÍSICO DEBE ESTAR CONECTADO A LA MISMA RED WIFI QUE LA COMPUTADORA DONDE SE EJECUTA EL BACKEND.!!!!
+// ToDo: NOTA, EL CELULAR FÍSICO DEBE ESTAR CONECTADO A LA MISMA RED WIFI QUE LA COMPUTADORA DONDE SE EJECUTA EL BACKEND.!!!!. EN CASO DE UN EMULADOR ANDROID NO ES NECESARIO.
 const String _baseUrl = 'http://10.0.2.2:5080';
 
 final dioClient = Dio(
